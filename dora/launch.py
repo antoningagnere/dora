@@ -11,7 +11,7 @@ from functools import partial
 import subprocess as sp
 import time
 
-from .conf import SubmitRules, update_from_args
+from .conf import SubmitRules, update_from_args, update_from_hydra
 from .main import DecoratedMain
 from .shep import Shepherd
 from .log import simple_log
@@ -23,7 +23,13 @@ log = partial(simple_log, "Launch:")
 def launch_action(args, main: DecoratedMain):
     shepherd = Shepherd(main, log=log)
     slurm = main.get_slurm_config()
+
+    # Fetch slurm config from hydra
+    cfg = main._get_config(args.argv)
+    update_from_hydra(slurm, cfg.slurm)
+    # Then update it with command line args
     update_from_args(slurm, args)
+
     rules = SubmitRules()
     update_from_args(rules, args)
 
