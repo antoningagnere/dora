@@ -342,11 +342,11 @@ class Shepherd:
         executor = submitit.SlurmExecutor(
             folder=folder, max_num_timeout=kwargs.pop('max_num_timeout'))
         gpus = slurm_config.gpus
-        if gpus > 8:
-            if gpus % 8 != 0:
-                raise ValueError("Can only take <= 8 gpus, or multiple of 8 gpus")
-            kwargs['nodes'] = gpus // 8
-            gpus_per_node = 8
+        if gpus > slurm_config.ngpus_per_node:
+            if gpus % slurm_config.ngpus_per_node != 0:
+                raise ValueError(f"Can only take <= {slurm_config.ngpus_per_node} gpus, or multiple of {slurm_config.ngpus_per_node} gpus")
+            kwargs['nodes'] = gpus // slurm_config.ngpus_per_node
+            gpus_per_node = slurm_config.ngpus_per_node
         else:
             gpus_per_node = gpus
             kwargs['nodes'] = 1
@@ -368,6 +368,7 @@ class Shepherd:
         del kwargs['cpus_per_gpu']
         del kwargs['one_task_per_node']
         del kwargs['dependents']
+        del kwargs['ngpus_per_node']
         logger.debug("Slurm parameters %r", kwargs)
 
         executor.update_parameters(

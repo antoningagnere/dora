@@ -62,6 +62,7 @@ def _compare_config(ref, other, path=[]):
     remaining = sorted(set(other.keys()) - set(ref.keys()))
     delta = []
     path.append(None)
+    # iterate of reference keys
     for key in keys:
         path[-1] = key
         ref_value = ref[key]
@@ -76,6 +77,7 @@ def _compare_config(ref, other, path=[]):
         elif other_value != ref_value:
             yield _Difference(list(path), key, ref, other, ref_value, other_value)
 
+    # iterate over other keys (eg. added with + hydra syntax)
     for key in remaining:
         path[-1] = key
         other_value = other[key]
@@ -171,7 +173,7 @@ class HydraMain(DecoratedMain):
         dora = DoraConfig()
         if hasattr(self._base_cfg, "dora"):
             update_from_hydra(dora, self._base_cfg.dora)
-        dora.exclude += ["dora.*", "slurm.*"]
+        dora.exclude += ["dora.*", "slurm.*", "slurm"] # also ignore slurm key
         dora.dir = Path(dora.dir)
         return dora
 

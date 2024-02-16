@@ -84,6 +84,7 @@ class SlurmConfig:
     time: int = 1200
     cpus_per_gpu: int = 10
     cpus_per_task: tp.Optional[int] = None
+    ngpus_per_node: int = 8
     partition: str = "learnlab"
     comment: tp.Optional[str] = None
     setup: tp.List[str] = field(default_factory=list)
