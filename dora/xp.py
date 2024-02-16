@@ -56,6 +56,10 @@ class XP:
     def folder(self) -> Path:
         assert self.sig is not None
         return self.dora.dir / self.dora.xps / self.sig
+    
+    @property
+    def dora_dir(self) -> Path:
+        return self.dora.dir
 
     @property
     def code_folder(self) -> Path:
