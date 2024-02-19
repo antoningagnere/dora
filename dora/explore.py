@@ -23,7 +23,7 @@ import typing as tp
 from treetable.table import _Node
 import treetable as tt
 
-from .conf import SlurmConfig
+from .conf import SlurmConfig, update_from_hydra
 from .shep import Shepherd, Sheep
 
 
@@ -61,6 +61,10 @@ class Herd:
 
     def add_sheep(self, shepherd: Shepherd, argv: tp.List[str], slurm: SlurmConfig,
                   pool: tp.Optional[ProcessPoolExecutor] = None):
+        """Add a sheep to the herd.
+        It compute xp's signature and add it to the herd if it does not exist yet.
+        """
+        slurm = self._update_slurm(shepherd, slurm, argv)
         if self._job_array_launcher is None:
             self.job_arrays.append([])
         job_array_index = len(self.job_arrays) - 1
@@ -77,6 +81,14 @@ class Herd:
         self.slurm_configs[sheep.xp.sig] = slurm
         if job_array_index is not None:
             self.job_arrays[job_array_index].append(sheep.xp.sig)
+
+    def _update_slurm(self, sheperd: Shepherd, slurm: SlurmConfig, argv: tp.List[str]) -> SlurmConfig:
+        """Update slurm config if argument is passed through --pass_to_hydra or with Explorer binding. 
+        """
+        slurm = deepcopy(slurm)
+        cfg = sheperd.main._get_config(argv)
+        update_from_hydra(slurm, cfg.slurm)
+        return slurm        
 
 
 class Launcher:

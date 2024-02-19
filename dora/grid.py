@@ -64,7 +64,7 @@ class RunGridArgs:
 
     """
     patterns: tp.List[str] = field(default_factory=list)
-
+    pass_to_hydra: tp.List[str] = field(default_factory=list)
     # Monitoring params
     monitor: bool = True
     interval: float = 5
@@ -170,7 +170,7 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
     shepherd = Shepherd(main, log=log)
     if main._slow:
         with ProcessPoolExecutor(4) as pool:
-            launcher = Launcher(shepherd, slurm, herd, pool=pool)
+            launcher = Launcher(shepherd, slurm, herd, pool=pool, argv=main.value_to_argv(args.pass_to_hydra))
             explorer(launcher)
             herd.complete()
     else:
@@ -225,6 +225,10 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
 
     shepherd.update()  # Update all job status
 
+    ## lazy submit, based on rules 
+    ## each sheep is associated with a SlurmJob attributes, which is a class that contains the job_id, job_name, and job_state
+    ## lazy submit checks if the job already has such config, if yes it does action based on rules
+    ## if not, it add the job the the _to_submit list
     if not args.cancel:
         sheep_map = {sheep.xp.sig: sheep for sheep in sheeps}
         for job_array in herd.job_arrays:
@@ -256,6 +260,9 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
                 log(f"Canceling job {sheep.job.job_id} for sheep {sheep.xp.sig}/{name}")
                 shepherd.cancel_lazy(sheep=sheep)
 
+    ## create symlinks (why??)
+    ## then use the commit method to submit the jobs    
+    ## its first cancel the job in _to_cancel list, then submit the job in _to_submit list 
     if not args.dry_run:
         for sheep in sheeps:
             link = (grid_folder / sheep.xp.sig)

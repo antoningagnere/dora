@@ -98,6 +98,8 @@ def get_parser():
     grid.add_argument("patterns", nargs='*',
                       help="Only handle experiments matching all the given pattern. "
                            "If empty, handle all experiments")
+    grid.add_argument("--pass_to_hydra", nargs='*', 
+                      help="Pass the given arguments to hydra")
     grid.set_defaults(action=grid_action)
 
     run = subparsers.add_parser("run", help="Run locally the given command.")
